@@ -15,10 +15,11 @@ struct ContentView: View {
     
     // Define the grid layout with 2 columns
     let gridItems = [GridItem(.flexible()), GridItem(.flexible())]
+    let operations: [Character] = ["+", "-", "×", "÷"]
     
     var body: some View {
         VStack {
-            Text(gameLogic.message)
+            Text("Math 24")
                 .font(.title)
                 .padding()
             
@@ -29,18 +30,14 @@ struct ContentView: View {
                         // Creating 4 items to fill the 2x2 grid
                         ForEach(0..<4, id: \.self) { index in
                             // Card view for each item in the grid
-                            if index != 0 {
-                                CardView(index: index, cardName: "\(gameLogic.numbers[index])", isSelected: true, isVisible: true)
+                            if let num = gameLogic.numbers[index] {
+                                NumberCardView(cardName: "\(num)", isSelected: index == gameLogic.selectedNumIndex, isVisible: true)
                                     .onTapGesture {
                                         // Change selected card
                                         gameLogic.selectNum(index: index)
                                     }
                             } else {
-                                CardView(index: index, cardName: "\(gameLogic.numbers[index])", isSelected: true, isVisible: false)
-                                    .onTapGesture {
-                                        // Change selected card
-                                        gameLogic.selectNum(index: index)
-                                    }
+                                NumberCardView(cardName: "", isSelected: false, isVisible: false)
                             }
                         }
                     }
@@ -49,61 +46,21 @@ struct ContentView: View {
             }
             
             HStack {
-                Button(action: {
-                    gameLogic.operation = "+"
-                }) {
-                    Text("+")
-                        .font(.largeTitle)
-                        .padding()
-                        .background(Color.orange)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                
-                Button(action: {
-                    gameLogic.operation = "-"
-                }) {
-                    Text("-")
-                        .font(.largeTitle)
-                        .padding()
-                        .background(Color.orange)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                
-                Button(action: {
-                    gameLogic.operation = "*"
-                }) {
-                    Text("×")
-                        .font(.largeTitle)
-                        .padding()
-                        .background(Color.orange)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                
-                Button(action: {
-                    gameLogic.operation = "/"
-                }) {
-                    Text("÷")
-                        .font(.largeTitle)
-                        .padding()
-                        .background(Color.orange)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+                ForEach(operations, id: \.self) { operation in
+                    // Card view for each item in the grid
+                    OperationCardView(cardName: operation, isSelected: operation == gameLogic.selectedOperation)
+                    .onTapGesture {
+                        // Change selected card
+                        gameLogic.selectOperation(operation: operation)
+                    }
                 }
             }
-            
-            Text(gameLogic.getResult())
-                .padding()
-                .font(.title2)
         }
         .padding()
     }
 }
 
-struct CardView: View {
-    let index: Int
+struct NumberCardView: View {
     let cardName: String
     let isSelected: Bool
     let isVisible: Bool
@@ -117,6 +74,27 @@ struct CardView: View {
             
             // Card label
             Text(cardName)
+                .font(.title)
+                .foregroundColor(.white)
+                .bold()
+        }
+        .animation(.easeInOut(duration: 0.3), value: isSelected)
+    }
+}
+
+struct OperationCardView: View {
+    let cardName: Character
+    let isSelected: Bool
+    
+    var body: some View {
+        ZStack {
+            // Card background color
+            RoundedRectangle(cornerRadius: 20)
+                .fill(isSelected ? Color.blue : Color.gray)
+                .frame(height: 100)
+            
+            // Card label
+            Text(String(cardName))
                 .font(.title)
                 .foregroundColor(.white)
                 .bold()

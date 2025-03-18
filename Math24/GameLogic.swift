@@ -8,75 +8,65 @@
 import SwiftUI
 
 class GameLogic: ObservableObject {
-    @Published var numbers: [Int] = []
+    @Published var numbers: [Int?] = []
     @Published var disabled: [Bool] = []
-    @Published var firstNumIndex: Int?
+    @Published var selectedNumIndex: Int?
     @Published var secondNumIndex: Int?
-    @Published var operation: Character?
-    @Published var currentExpression: Int?
-    @Published var isCorrect: Bool = false
-    @Published var message: String = ""
+    @Published var selectedOperation: Character?
     
     init() {
         generateRandomNumbers()
     }
 
     func refresh() {
-        firstNumIndex = nil
-        secondNumIndex = nil
-        operation = nil
+        selectedNumIndex = nil
+        selectedOperation = nil
     }
     
     func generateRandomNumbers() {
         numbers = (1...4).map { _ in Int.random(in: 1...9) }
-        message = "Math 24"
-        isCorrect = false
     }
     
     func selectNum(index: Int) {
-        if firstNumIndex != nil {
-            secondNumIndex = index
-            evaluate()
+        if selectedOperation != nil && selectedNumIndex != nil {
+            do {
+                try evaluate(secondNumIndex: index)
+            } catch OperationError.unimplementedOperation {
+                print("This operation has not yet been implemented")
+            } catch {
+                print("Invalid operation")
+            }
         } else {
-            firstNumIndex = index
+            selectedNumIndex = index
         }
     }
     
-    func evaluate() {
-        let firstNum = numbers[firstNumIndex ?? 0]
-        let secondNum = numbers[secondNumIndex ?? 0]
-        switch operation {
-            case "+":
-                currentExpression = firstNum + secondNum
-            case "-":
-                currentExpression = firstNum - secondNum
-            case "×":
-                currentExpression = firstNum * secondNum
-            case "÷":
-//              Not Implemented
-                currentExpression = 0
-            default:
-                currentExpression = 0
-        }
-        refresh()
+    func selectOperation(operation: Character) {
+        selectedOperation = operation
     }
+    
+    func evaluate(secondNumIndex: Int) throws {
+        if let firstNumIndex = selectedNumIndex, let firstNum = numbers[firstNumIndex], let secondNum = numbers[secondNumIndex] {
+            switch selectedOperation {
+                case "+":
+                    numbers[secondNumIndex] = firstNum + secondNum
+                case "-":
+                    numbers[secondNumIndex] = firstNum - secondNum
+                case "×":
+                    numbers[secondNumIndex] = firstNum * secondNum
+                case "÷":
+                    throw OperationError.unimplementedOperation
+                default:
+                    throw OperationError.invalidOperation
+            }
+            numbers[firstNumIndex] = nil
+            refresh()
+        }
+        
+    }
+}
 
-    func checkSolution() {
-        if currentExpression == 24 {
-            message = "Correct!"
-            isCorrect = true
-        } else {
-            message = "Try again!"
-            isCorrect = false
-        }
-    }
-    
-    func getResult() -> String {
-        var str = ""
-        if let v = currentExpression {
-           str = "\(v)"
-        }
-        return str
-    }
-    
+enum OperationError: Error {
+    case unimplementedOperation
+    case invalidOperation
 }
